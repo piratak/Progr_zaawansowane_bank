@@ -90,7 +90,11 @@ def MenuGłówne(bank):
         print("5. Wypłać pieniądze")
         print("6. Przelej pieniądze")
         print("9. Wyjdź")
-        wybór = int(input("Wybierz opcję: "))
+        try:
+            wybór = int(input("Wybierz opcję: "))
+        except:
+            print("Niepoprawna wartość")
+            continue
         if wybór == 1:
             nowe_konto = StworzKonto(bank)
             nowe_konto.stworz()
