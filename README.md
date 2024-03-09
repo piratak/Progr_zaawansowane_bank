@@ -1,1 +1,1 @@
-﻿# Progr_zaawansowane_bank
+Projekt z programowania zaawansowanego - bankowość
