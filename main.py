@@ -1,40 +1,63 @@
+import sqlite3
 import tkinter as tk
 from tkinter import simpledialog, messagebox, Toplevel, Listbox, END, Button
-import sqlite3
+
+class BankDBOperations:
+    @staticmethod
+    def create_tables(cursor):
+        cursor.execute('''CREATE TABLE IF NOT EXISTS konta (
+                           numer_konta INTEGER PRIMARY KEY AUTOINCREMENT,
+                           stan_konta REAL NOT NULL)''')
+
+    @staticmethod
+    def dodaj_konto(cursor, stan_konta):
+        cursor.execute('INSERT INTO konta (stan_konta) VALUES (?)', (stan_konta,))
+        return cursor.lastrowid
+
+    @staticmethod
+    def usun_konto(cursor, numer_konta):
+        cursor.execute('DELETE FROM konta WHERE numer_konta = ?', (numer_konta,))
+
+    @staticmethod
+    def zmien_stan_konta(cursor, numer_konta, kwota):
+        cursor.execute('UPDATE konta SET stan_konta = stan_konta + ? WHERE numer_konta = ?', (kwota, numer_konta))
+
+    @staticmethod
+    def podglad_konta(cursor, numer_konta):
+        cursor.execute('SELECT stan_konta FROM konta WHERE numer_konta = ?', (numer_konta,))
+        return cursor.fetchone()
+
+    @staticmethod
+    def wszystkie_konta(cursor):
+        cursor.execute('SELECT numer_konta, stan_konta FROM konta')
+        return cursor.fetchall()
 
 class BankDB:
     def __init__(self, db_name="bank.db"):
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
-        self._create_tables()
-
-    def _create_tables(self):
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS konta (
-                               numer_konta INTEGER PRIMARY KEY AUTOINCREMENT,
-                               stan_konta REAL NOT NULL)''')
+        BankDBOperations.create_tables(self.cursor)
         self.conn.commit()
 
     def dodaj_konto(self, stan_konta):
-        self.cursor.execute('INSERT INTO konta (stan_konta) VALUES (?)', (stan_konta,))
+        numer_konta = BankDBOperations.dodaj_konto(self.cursor, stan_konta)
         self.conn.commit()
-        return self.cursor.lastrowid
+        return numer_konta
 
     def usun_konto(self, numer_konta):
-        self.cursor.execute('DELETE FROM konta WHERE numer_konta = ?', (numer_konta,))
+        BankDBOperations.usun_konto(self.cursor, numer_konta)
         self.conn.commit()
 
     def zmien_stan_konta(self, numer_konta, kwota):
-        self.cursor.execute('UPDATE konta SET stan_konta = stan_konta + ? WHERE numer_konta = ?', (kwota, numer_konta))
+        BankDBOperations.zmien_stan_konta(self.cursor, numer_konta, kwota)
         self.conn.commit()
 
     def podglad_konta(self, numer_konta):
-        self.cursor.execute('SELECT stan_konta FROM konta WHERE numer_konta = ?', (numer_konta,))
-        result = self.cursor.fetchone()
+        result = BankDBOperations.podglad_konta(self.cursor, numer_konta)
         return result[0] if result else None
 
     def wszystkie_konta(self):
-        self.cursor.execute('SELECT numer_konta, stan_konta FROM konta')
-        return self.cursor.fetchall()
+        return BankDBOperations.wszystkie_konta(self.cursor)
 
 class Bank:
     def __init__(self, db):
