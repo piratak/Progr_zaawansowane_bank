@@ -78,6 +78,14 @@ class Bank:
     def wszystkie_konta(self):
         return self.db.wszystkie_konta()
 
+    def przelew(self, numer_konta_zrodlowego, numer_konta_docelowego, kwota):
+        stan_konta_zrodlowego = self.db.podglad_konta(numer_konta_zrodlowego)
+        if stan_konta_zrodlowego is not None and stan_konta_zrodlowego >= kwota:
+            self.db.zmien_stan_konta(numer_konta_zrodlowego, -kwota)
+            self.db.zmien_stan_konta(numer_konta_docelowego, kwota)
+            return True
+        return False
+
 class DialogWplacPieniadze:
     def __init__(self, bank, root):
         self.bank = bank
@@ -138,10 +146,27 @@ class ListaKontWindow:
         lb.config(yscrollcommand=scrollbar.set)
 
         konta = self.bank.wszystkie_konta()
-        for numer_konta, stan_konta in konta:
-            lb.insert(END, f"Numer konta: {numer_konta}, Stan konta: {stan_konta}")
+        for numer_konta, _ in konta:
+            lb.insert(END, f"Numer konta: {numer_konta}")
 
         Button(window, text="Zamknij", command=window.destroy).pack(pady=5)
+
+class DialogPrzelew:
+    def __init__(self, bank, root):
+        self.bank = bank
+        self.root = root
+
+    def wykonaj(self):
+        numer_konta_zrodlowego = simpledialog.askinteger("Przelew", "Podaj numer konta źródłowego:", parent=self.root)
+        numer_konta_docelowego = simpledialog.askinteger("Przelew", "Podaj numer konta docelowego:", parent=self.root)
+        kwota = simpledialog.askfloat("Przelew", "Podaj kwotę przelewu:", parent=self.root)
+        if numer_konta_zrodlowego and numer_konta_docelowego and kwota and kwota > 0:
+            if self.bank.przelew(numer_konta_zrodlowego, numer_konta_docelowego, kwota):
+                messagebox.showinfo("Przelew zakończony", "Przelew został zrealizowany pomyślnie.", parent=self.root)
+            else:
+                messagebox.showerror("Błąd", "Nie udało się zrealizować przelewu.", parent=self.root)
+        else:
+            messagebox.showerror("Błąd", "Nieprawidłowe dane.", parent=self.root)
 
 class BankApp:
     def __init__(self, root, bank):
@@ -158,6 +183,8 @@ class BankApp:
         tk.Button(self.root, text="Podgląd konta", command=lambda: DialogPodgladKonta(self.bank, self.root).wykonaj()).pack(fill=tk.X)
         tk.Button(self.root, text="Usuń konto", command=self.usun_konto).pack(fill=tk.X)
         tk.Button(self.root, text="Wyjście", command=self.root.quit).pack(fill=tk.X)
+        tk.Button(self.root, text="Przelew między kontami",
+                  command=lambda: DialogPrzelew(self.bank, self.root).wykonaj()).pack(fill=tk.X)
 
     def stworz_konto(self):
         stan_konta = simpledialog.askfloat("Stan konta", "Podaj początkowy stan konta:", parent=self.root)
@@ -177,6 +204,8 @@ class BankApp:
             messagebox.showinfo("Usuwanie konta", "Konto zostało usunięte.", parent=self.root)
         else:
             messagebox.showwarning("Anulowano", "Usuwanie konta zostało anulowane.", parent=self.root)
+
+
 
 if __name__ == "__main__":
     db = BankDB()
