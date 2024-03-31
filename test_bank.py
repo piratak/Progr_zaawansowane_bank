@@ -40,5 +40,12 @@ def test_wszystkie_konta(test_bank):
     assert konta[0][0] == numer_konta1 and konta[0][1] == 100.0
     assert konta[1][0] == numer_konta2 and konta[1][1] == 200.0
 
+def test_przelew(test_bank):
+    numer_konta1 = test_bank.dodaj_konto(200.0)
+    numer_konta2 = test_bank.dodaj_konto(200.0)
+    test_bank.przelew(numer_konta1, numer_konta2, 100.0)
+    assert test_bank.podglad_konta(numer_konta1) == 100.0
+    assert test_bank.podglad_konta(numer_konta2) == 300.0
+
 if __name__ == "__main__":
     pytest.main()

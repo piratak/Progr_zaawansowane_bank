@@ -34,10 +34,13 @@ class BankDBOperations:
 
 class BankDB:
     def __init__(self, db_name="bank.db"):
-        self.conn = sqlite3.connect(db_name)
-        self.cursor = self.conn.cursor()
-        BankDBOperations.create_tables(self.cursor)
-        self.conn.commit()
+        try:
+            self.conn = sqlite3.connect(db_name)
+            self.cursor = self.conn.cursor()
+            BankDBOperations.create_tables(self.cursor)
+            self.conn.commit()
+        except sqlite3.Error as e:
+            print(f"Błąd połączenia z bazą danych!: {e}")
 
     def dodaj_konto(self, stan_konta):
         numer_konta = BankDBOperations.dodaj_konto(self.cursor, stan_konta)
@@ -187,12 +190,12 @@ class BankApp:
                   command=lambda: DialogPrzelew(self.bank, self.root).wykonaj()).pack(fill=tk.X)
 
     def stworz_konto(self):
-        stan_konta = simpledialog.askfloat("Stan konta", "Podaj początkowy stan konta:", parent=self.root)
-        if stan_konta is not None and stan_konta >= 0:
-            numer_konta = self.bank.dodaj_konto(stan_konta)
-            messagebox.showinfo("Konto utworzone", f"Numer konta: {numer_konta}\nStan konta: {stan_konta}", parent=self.root)
-        else:
-            messagebox.showwarning("Anulowano", "Tworzenie konta zostało anulowane.", parent=self.root)
+            stan_konta = simpledialog.askfloat("Stan konta", "Podaj początkowy stan konta:", parent=self.root)
+            if stan_konta is not None and stan_konta >= 0:
+                numer_konta = self.bank.dodaj_konto(stan_konta)
+                messagebox.showinfo("Konto utworzone", f"Numer konta: {numer_konta}\nStan konta: {stan_konta}", parent=self.root)
+            else:
+                messagebox.showwarning("Anulowano", "Tworzenie konta zostało anulowane.", parent=self.root)
 
     def podglad_wszystkich_kont(self):
         ListaKontWindow(self.bank, self.root).show()
